@@ -43,20 +43,28 @@ local function clear_highlights()
     end
 end
 
+local function chain_esc(existing)
+    if existing and existing.rhs and existing.rhs ~= "" then
+        vim.fn.feedkeys(vim.api.nvim_replace_termcodes(existing.rhs, true, false, true), "n")
+    elseif existing and existing.callback then
+        existing.callback()
+    else
+        vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n")
+    end
+end
+
 local function setup_esc_handler()
-    local existing_esc = vim.fn.maparg("<Esc>", "n", false, true)
+    local existing_n_esc = vim.fn.maparg("<Esc>", "n", false, true)
+    local existing_v_esc = vim.fn.maparg("<Esc>", "v", false, true)
 
     vim.keymap.set("n", "<Esc>", function()
         clear_highlights()
+        chain_esc(existing_n_esc)
+    end, { noremap = true, silent = true, desc = "Clear jump highlights and Escape" })
 
-        if existing_esc and existing_esc.rhs and existing_esc.rhs ~= "" then
-            local keys = vim.api.nvim_replace_termcodes(existing_esc.rhs, true, false, true)
-            vim.fn.feedkeys(keys, "n")
-        elseif existing_esc and existing_esc.callback then
-            existing_esc.callback()
-        else
-            vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
-        end
+    vim.keymap.set("v", "<Esc>", function()
+        clear_highlights()
+        chain_esc(existing_v_esc)
     end, { noremap = true, silent = true, desc = "Clear jump highlights and Escape" })
 end
 
@@ -70,13 +78,16 @@ function M.setup(opts)
     })
 
     vim.on_key(function(key)
-        if vim.fn.mode() == "n" and key == "0" and state.count ~= "" then
+        local mode = vim.fn.mode()
+        local is_visual = (mode == "v" or mode == "V" or mode == "\22")
+
+        if (mode == "n" or is_visual) and key == "0" and state.count ~= "" then
             on_number_typed("0")
         end
     end, state.ns)
 
     for i = 1, 9 do
-        vim.keymap.set("n", tostring(i), function()
+        vim.keymap.set({ "n", "v" }, tostring(i), function()
             on_number_typed(tostring(i))
             return tostring(i)
         end, { expr = true, noremap = true, silent = true })
