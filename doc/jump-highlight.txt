@@ -1,0 +1,26 @@
+*jump-highlight*
+
+Highlight matching line numbers as you type digits to provide
+visual feedback for line jumps.
+
+==============================================================================
+USAGE
+
+Default configuration:
+
+>lua
+    require('jump-highlight').setup({
+        bg = nil,       -- Default background (none)
+        fg = "#EBCB8B", -- Default foreground
+    })
+<
+
+You can also customize the appearance via the `JumpHighlight` highlight group.
+
+The plugin intercepts numeric keys 0-9 to trigger highlights. Highlights clear
+automatically on CursorMoved, ModeChanged, BufLeave, or InsertEnter.
+
+==============================================================================
+License: Unlicense (Public Domain)
+
+vim:tw=78:ts=8:ft=help:norl:
